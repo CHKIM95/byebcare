@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<meta charset="utf-8", http-equiv="refresh" content="5" />
+<title>BYE-B CARE</title>
+<style>
+    body {
+        width: 100%;
+        height: 100%;
+        background-color: #202020;
+    }
+
+    div {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        display: table;
+    }
+
+    h2 {
+        display: table-cell;
+        vertical-align: middle;
+        text-align: center;
+        color: #FFFFFF;
+    }
+
+    p {
+        color: #FFFFFF;
+    }
+</style>
+<script src="webOSjs-0.1.0/webOS.js" charset="utf-8"></script>
+<script>
+    // need to change to websocket server's address
+    var wsUri = "ws://192.168.43.213:9999";
+    var output;
+
+    function init() {
+        output = document.getElementById("output");
+        testWebSocket();
+    }
+
+    function testWebSocket() {
+        websocket = new WebSocket(wsUri);
+        websocket.onopen = function (evt) { onOpen(evt) };
+        websocket.onclose = function (evt) { onClose(evt) };
+        websocket.onmessage = function (evt) { onMessage(evt) };
+        websocket.onerror = function (evt) { onError(evt) };
+    }
+
+    function onOpen(evt) {
+        writeToScreen("CONNECTED");
+        doSend();
+    }
+
+    function onClose(evt) {
+        writeToScreen("DISCONNECTED");
+    }
+
+    function onMessage(evt) {
+        var message = JSON.parse(evt.data);
+        writeToScreen('<span style="color: green;">RESPONSE: '+message.X+ ', '+message.Y + ', ' +message.Z + ', ' +message.A + ', ' +message.O +', '+ message.B + '</span>');
+        showNotification(message);
+        websocket.close();
+    }
+
+    function showNotification(message) {
+	var msgAlert = "Help!";
+        if (parseInt(message.B) < 300) {
+	msgAlert += "<br />BPM is low";
+        }
+        if (parseInt(message.O) < 300) {
+	    msgAlert += "<br />Thermometer is low <br />";
+        }
+ /*var lunaReq = webOS.service.request("luna://com.webos.notification",
+            {
+                method: "createToast",
+                parameters: {
+                    "sourceId": "com.byebcare.app",
+                    "message": msgAlert, 
+                    "onclick" : {"appId":"com.byebcare.app"}
+                },
+                onSuccess: function (args) {
+
+                },
+                onFailure: function (args) {
+                }
+            });
+*/
+            var lunaReq2 = webOS.service.request("luna://com.webos.notification",
+            {
+                method: "createAlert",
+                parameters: {
+                    "message": msgAlert, 
+                    "buttons":[
+                                {"label":"button1", "onclick":"luna://com.webos.applicationManager/launch", "params":{"id":"com.webos.app.settings"}},
+                                {"label":"button2", "focus":true},
+                                {"label":"button3"}
+                    ]
+                },
+                onSuccess: function (args) {
+                    console.log("SUUUUUUUUC");
+                },
+                
+                onFailure: function (args) {
+                    console.log(args.errorText);
+                }
+
+            });
+    }
+
+    function onError(evt) {
+        writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    }
+
+    function doSend() {
+        var message = {
+            "X":0,
+            "Y":0,
+            "Z":0,
+            "B":0,
+            "A":0,
+            "O":0
+        };
+
+        //writeToScreen("SENT: " + JSON.stringify(message));
+        websocket.send(JSON.stringify(message));
+    }
+
+    function writeToScreen(message) {
+        var pre = document.createElement("p");
+        pre.style.wordWrap = "break-word";
+        pre.innerHTML = message;
+        output.appendChild(pre);
+    }
+
+    // Notification code will be put here
+
+    window.addEventListener("load", init, false);
+</script>
+
+<h2>BYE-B CARE</h2>
+
+<div id="output"></div>

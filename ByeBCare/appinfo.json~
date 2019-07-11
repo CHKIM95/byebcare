@@ -1,0 +1,12 @@
+{
+  "id": "com.webos.app.byebcare",
+  "version": "1.0.0",
+  "vendor": "My Company",
+  "type": "web",
+  "main": "index.html",
+  "title": "byebcare",
+  "icon": "icon1.png",
+  "largeIcon": "largeIcon.png",
+  "uiRevision": 2,
+  "requiredPermissions": ["notification"]
+}
